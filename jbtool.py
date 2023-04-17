@@ -67,6 +67,8 @@ def main():
     clear-remotes -- Remove remote interpreters and all deployments
     """
 
+    # TODO: Implement actions via sub-commands
+    #     https://docs.python.org/3/library/argparse.html#sub-commands
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('confdir', type=str, help='IDE configuration directory')
     parser.add_argument('action', type=str, help=help_msg)
