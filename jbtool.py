@@ -16,14 +16,24 @@ def clear_remotes(confdir):
         if i.find('additional').find('PathMappingSettings'):
             to_remove.append(i)
 
-    for i in to_remove:
-        jdks.remove(i)
+    if to_remove:
+        print('\nRemoving the following interpreters:')
+        for i in to_remove:
+            name = i.find('name').get('value')
+            print(name)
+            jdks.remove(i)
+    else:
+        print('No remote interpreters found')
 
     tree.write(jdk_table)
 
 
 def drop_deployments(confdir):
-    os.remove(f'{confdir}/options/webServers.xml')
+    f = f'{confdir}/options/webServers.xml'
+    if os.path.exists(f):
+        os.remove(f)
+    else:
+        print(f'The file \'{f}\' doesn\'t exist')
 
 
 def free_venv(confdir):
@@ -33,7 +43,11 @@ def free_venv(confdir):
     jdks = root[0]
 
     for i in jdks:
-        i.find('additional').attrib.pop('ASSOCIATED_PROJECT_PATH', None)
+        elem = i.find('additional')
+        p = elem.attrib.pop('ASSOCIATED_PROJECT_PATH', None)
+        if p:
+            name = i.find('name').get('value')
+            print(f'Freed \'{name}\'')
 
     tree.write(jdk_table)
 
