@@ -12,18 +12,18 @@ def clear_remotes(confdir):
     jdks = root[0]
     to_remove = []
 
-    for i in jdks:
-        if i.find('additional').find('PathMappingSettings'):
-            to_remove.append(i)
+    for jdk in jdks:
+        if jdk.find('additional').find('PathMappingSettings'):
+            to_remove.append(jdk)
 
     if to_remove:
-        print('\nRemoving the following interpreters:')
-        for i in to_remove:
-            name = i.find('name').get('value')
-            print(name)
-            jdks.remove(i)
+        print('\nRemoving the following interpreters:\n')
+        for jdk in to_remove:
+            name = jdk.find('name').get('value')
+            print(f'- {name}')
+            jdks.remove(jdk)
     else:
-        print('No remote interpreters found')
+        print('\nNo remote interpreters found\n')
 
     tree.write(jdk_table)
 
@@ -42,12 +42,21 @@ def free_venv(confdir):
     root = tree.getroot()
     jdks = root[0]
 
-    for i in jdks:
-        elem = i.find('additional')
-        p = elem.attrib.pop('ASSOCIATED_PROJECT_PATH', None)
-        if p:
-            name = i.find('name').get('value')
-            print(f'Freed \'{name}\'')
+    to_free = []
+    attr = 'ASSOCIATED_PROJECT_PATH'
+
+    for jdk in jdks:
+        if jdk.find('additional').get(attr):
+            to_free.append(jdk)
+
+    if to_free:
+        print('\nFreeing the following interpreters...\n')
+        for jdk in to_free:
+            name = jdk.find('name').get('value')
+            print(f'- {name}')
+            jdk.find('additional').attrib.pop(attr)
+    else:
+        print('\nNoting to free...\n')
 
     tree.write(jdk_table)
 
