@@ -39,9 +39,14 @@ def free_venv(confdir):
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    help_msg = """Possible actions:
+    free-venv -- Un-associate venv interpreters from their projects
+    clear-remotes -- Remove remote interpreters and all deployments
+    """
+
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('confdir', type=str, help='IDE configuration directory')
-    parser.add_argument('action', type=str, help='Action')
+    parser.add_argument('action', type=str, help=help_msg)
     args = parser.parse_args()
 
     confdir = args.confdir
