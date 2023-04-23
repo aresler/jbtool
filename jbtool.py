@@ -5,11 +5,32 @@ import os
 import xml.etree.ElementTree as ET
 
 
+def remove_file(f):
+    if os.path.exists(f):
+        os.remove(f)
+        print(f'\'{f}\' removed')
+    else:
+        print(f'The file \'{f}\' doesn\'t exist')
+
+
+def validate_file(f):
+    if not os.path.exists(f):
+        print(f'The file \'{f}\' does not exist. Exiting...')
+        exit(1)
+
+
 def clear_remotes(confdir):
     jdk_table = f'{confdir}/options/jdk.table.xml'
+    web_servers = f'{confdir}/options/webServers.xml'
+    validate_file(jdk_table)
+
+    print('Removing deployments...')
+    remove_file(web_servers)
+
     tree = ET.parse(jdk_table)
     root = tree.getroot()
     jdks = root[0]
+
     to_remove = []
 
     for jdk in jdks:
@@ -17,7 +38,7 @@ def clear_remotes(confdir):
             to_remove.append(jdk)
 
     if to_remove:
-        print('\nRemoving the following interpreters:\n')
+        print('\nRemoving the following interpreters:')
         for jdk in to_remove:
             name = jdk.find('name').get('value')
             print(f'- {name}')
@@ -28,16 +49,10 @@ def clear_remotes(confdir):
     tree.write(jdk_table)
 
 
-def drop_deployments(confdir):
-    f = f'{confdir}/options/webServers.xml'
-    if os.path.exists(f):
-        os.remove(f)
-    else:
-        print(f'The file \'{f}\' doesn\'t exist')
-
-
 def free_venv(confdir):
     jdk_table = f'{confdir}/options/jdk.table.xml'
+    validate_file(jdk_table)
+
     tree = ET.parse(jdk_table)
     root = tree.getroot()
     jdks = root[0]
@@ -50,7 +65,7 @@ def free_venv(confdir):
             to_free.append(jdk)
 
     if to_free:
-        print('\nFreeing the following interpreters...\n')
+        print('\nFreeing the following interpreters:')
         for jdk in to_free:
             name = jdk.find('name').get('value')
             print(f'- {name}')
@@ -62,27 +77,22 @@ def free_venv(confdir):
 
 
 def main():
-    help_msg = """Possible actions:
-    free-venv -- Un-associate venv interpreters from their projects
-    clear-remotes -- Remove remote interpreters and all deployments
-    """
+    parser = argparse.ArgumentParser()
 
-    # TODO: Implement actions via sub-commands
-    #     https://docs.python.org/3/library/argparse.html#sub-commands
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('confdir', type=str, help='IDE configuration directory')
-    parser.add_argument('action', type=str, help=help_msg)
+    sub = parser.add_subparsers(
+        title='Possible actions',
+    )
+
+    sub1 = sub.add_parser('free-venv', help='Un-associate virtualenv interpreters')
+    sub1.add_argument('-c', '--config-dir', type=str, required=True, help='Configuration directory')
+    sub1.set_defaults(func=free_venv)
+
+    sub2 = sub.add_parser('clear-remotes', help='Remove remote interpreters and all deployments')
+    sub2.add_argument('-c', '--config-dir', type=str, required=True, help='Configuration directory')
+    sub2.set_defaults(func=clear_remotes)
+
     args = parser.parse_args()
-
-    confdir = args.confdir
-    action = args.action
-
-    match action:
-        case "free-venv":
-            free_venv(confdir)
-        case "clear-remotes":
-            clear_remotes(confdir)
-            drop_deployments(confdir)
+    args.func(args.config_dir)
 
 
 if __name__ == '__main__':
