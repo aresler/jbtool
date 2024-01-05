@@ -77,6 +77,25 @@ def free_venv(confdir: Path):
     tree.write(jdk_table)
 
 
+def switch_config(confdir: Path):
+    confname = confdir.name
+    parent = confdir.parent
+    conf_test = parent / (confname + '.test')
+    conf_prod = parent / (confname + '.prod')
+
+    if not Path.exists(conf_test) and not Path.exists(conf_prod):
+        print('Making a copy of config...')
+        shutil.copytree(confdir, conf_prod)
+    elif Path.exists(conf_test):
+        print('Switching to test...')
+        Path.rename(confdir, conf_prod)
+        Path.rename(conf_test, confdir)
+    elif Path.exists(conf_prod):
+        print('Switching to prod...')
+        Path.rename(confdir, conf_test)
+        Path.rename(conf_prod, confdir)
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -91,6 +110,10 @@ def main():
     sub2 = sub.add_parser('clear-remotes', help='Remove remote interpreters and all deployments')
     sub2.add_argument('-c', '--config-dir', type=str, required=True, help='Configuration directory')
     sub2.set_defaults(func=clear_remotes)
+
+    sub3 = sub.add_parser('switch-config', help='Switch between test and prod configs')
+    sub3.add_argument('-c', '--config-dir', type=str, required=True, help='Configuration directory')
+    sub3.set_defaults(func=switch_config)
 
     args = parser.parse_args()
     args.func(Path(args.config_dir))
