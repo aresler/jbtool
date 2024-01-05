@@ -1,27 +1,28 @@
 #!/usr/local/bin/python3
 
 import argparse
-import os
+import shutil
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 
-def remove_file(f):
-    if os.path.exists(f):
-        os.remove(f)
+def remove_file(f: Path):
+    if Path.exists(f):
+        Path.unlink(f)
         print(f'\'{f}\' removed')
     else:
         print(f'The file \'{f}\' doesn\'t exist')
 
 
-def validate_file(f):
-    if not os.path.exists(f):
+def validate_file(f: Path):
+    if not Path.exists(f):
         print(f'The file \'{f}\' does not exist. Exiting...')
         exit(1)
 
 
-def clear_remotes(confdir):
-    jdk_table = f'{confdir}/options/jdk.table.xml'
-    web_servers = f'{confdir}/options/webServers.xml'
+def clear_remotes(confdir: Path):
+    jdk_table = confdir / 'options/jdk.table.xml'
+    web_servers = confdir / 'options/webServers.xml'
     validate_file(jdk_table)
 
     print('Removing deployments...')
@@ -49,8 +50,8 @@ def clear_remotes(confdir):
     tree.write(jdk_table)
 
 
-def free_venv(confdir):
-    jdk_table = f'{confdir}/options/jdk.table.xml'
+def free_venv(confdir: Path):
+    jdk_table = confdir / 'options/jdk.table.xml'
     validate_file(jdk_table)
 
     tree = ET.parse(jdk_table)
@@ -92,7 +93,7 @@ def main():
     sub2.set_defaults(func=clear_remotes)
 
     args = parser.parse_args()
-    args.func(args.config_dir)
+    args.func(Path(args.config_dir))
 
 
 if __name__ == '__main__':
