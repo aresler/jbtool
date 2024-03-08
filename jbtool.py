@@ -4,6 +4,7 @@ import argparse
 import shutil
 import xml.etree.ElementTree as ET
 from pathlib import Path
+import psutil
 
 
 def remove_file(f: Path):
@@ -77,7 +78,23 @@ def free_venv(confdir: Path):
     tree.write(jdk_table)
 
 
+def check_process_exist(p):
+    for proc in psutil.process_iter(['name']):
+        if proc.info.get('name') == p:
+            print(f'Process "{p}" is running. Exiting...')
+            exit(0)
+
+
 def switch_config(confdir: Path):
+    path = confdir.__str__()
+    if 'pycharm' in path.lower():
+        check_process_exist('pycharm')
+    elif 'idea' in path.lower():
+        check_process_exist('idea')
+    else:
+        print('No known IDE process found...')
+        exit(1)
+
     confname = confdir.name
     parent = confdir.parent
     conf_test = parent / (confname + '.test')
